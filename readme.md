@@ -141,7 +141,7 @@ https://github.com/tzapu/WiFiManager
 I wanted digest auth to secure the endpoints and was about to write my own.  Then I noticed that 
 the ESP8266WebServer class had digest auth added just a couple months ago.  When I pulled 
 the entire ESP8266 core down, it caused a lot of side-effects and broke functionality, so I 
-used OO subclassing techniques and ported the digest code into the ExtendedWebServer class.  
+used OO subclassing techniques and ported the digest code into the ExtendedWebServer class. 
 This should make it trival to remove and use the official ESP8266WebServer code once the next 
 major core is released.  Major thanks!
 
