@@ -1,0 +1,8 @@
+# garage_o_matic build visual micro property overrides
+#
+network.port=8266
+
+# Change the password to the device password you
+# set in the configuration portal
+network.password=password
+network.auth_upload=yes
