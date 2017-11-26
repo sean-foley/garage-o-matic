@@ -53,6 +53,9 @@
     <ClInclude Include="extendedwebserver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="discoveryproxy.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="WiFiManager.cpp">
@@ -83,6 +86,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="extendedwebserver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="discoveryproxy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

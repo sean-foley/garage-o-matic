@@ -73,6 +73,18 @@ You interact with Garage-o-Matic via REST API endpoints secured with DIGEST auth
 allows you to integrate garage-o-matic with a wide variety of tools, such as curl in a script,
 node-red, or even a browser.
 
+The device supports multicast DNS (mDNS).  If you have a compatible browser and/or OS, you should
+be able to access the device's REST endpoints using the FQDN garage-o-matic.local (i.e. add .local to
+the hostname.)
+
+LEDs  
+The BLUE LED indicates a good network connection.  It turns on when the Garage-o-Matic successfully
+associates with your wireless LAN.
+
+The RED LED indicates activity. It will flash to indicate the device is operating normally.
+
+Red/Blue LED wig/wag indicates a successful factory reset of the configuration data.
+
 Status  
 http://garage-o-matic/garage/door/status/# where # is the garage door number. This will return
 a application/text message of open/closed depending on if the door is open or closed.
@@ -84,19 +96,24 @@ if the door is open, or an open command if the door is closed.
 ## Examples
 
 Example - check the status of garage door 0  
-http://garage-o-matic/garage/door/status/0
+http://garage-o-matic.local/garage/door/status/0
 
 Example - open garage door 0  
-http://garage-o-matic/garage/door/command/open/0
+http://garage-o-matic.local/garage/door/command/open/0
 
 Example - close garage door 0  
-http://garage-o-matic/garage/door/command/close/0
+http://garage-o-matic.local/garage/door/command/close/0
 
 Factory Reset  
 If you want to reconfigure the device, then you need to pull GPIO 16 HIGH while rebooting/reseting 
 the device. The LEDs will wig-wag to indicate that the previous configuration has been deleted. 
 Make sure to stop pulling GPIO 16 HIGH before the next reset.
 
+Over-The-Air Firmware Support  
+The garage-o-matic firmware support OTA updates.  This is password protected using the same
+device password used for for the REST API.  Once you mount the device, this is a nice 
+convenience feature if you want to add enhancements.  Please note this OTA support is not
+appropriate for a commercial product.
 
 ## Security
 

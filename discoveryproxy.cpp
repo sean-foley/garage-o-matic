@@ -1,16 +1,21 @@
 /*======================================================================
 FILE:
-firmwareupdater.cpp
+discoveryproxy.cpp
 
 CREATOR:
 Sean Foley
 
+SERVICES:
+mDNS support
+
 DESCRIPTION:
-This is a proxy class that hides the ArduinoOTA over-the-air
-firmware update functionality
+Network and service discovery support.
 
 PUBLIC CLASSES AND FUNCTIONS:
-FirmwareUpdater
+DiscoveryProxy
+
+INITIALIZATION AND SEQUENCING REQUIREMENTS:
+A valid network connection must exist
 
 Copyright (C) 2017 Sean Foley  All Rights Reserved.
 
@@ -44,12 +49,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Include Files
 //----------------------------------------------------------------------
 
-#include "firmwareupdater.h"
+#include "discoveryproxy.h"
 
-#include <ArduinoOTA.h>
+// Multicast DNS
+#include <ESP8266mDNS.h>
 
-// std::bind support
-#include <functional>
+// For SSDP support
+//#include <ESP8266SSDP.h>
 
 //----------------------------------------------------------------------
 // Type Declarations
@@ -94,7 +100,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*======================================================================
 FUNCTION:
-FirmwareUpdater()
+DiscoveryProxy()
 
 DESCRIPTION:
 C-tor
@@ -106,8 +112,7 @@ SIDE EFFECTS:
 none
 
 ======================================================================*/
-FirmwareUpdater::FirmwareUpdater(const String &hostname, const String &password, int port)
-    :_hostname(hostname), _password(password), _port(port)
+DiscoveryProxy::DiscoveryProxy(const String &hostname) : _hostname(hostname)
 {
 
 }
@@ -117,96 +122,29 @@ FUNCTION:
 Begin()
 
 DESCRIPTION:
-This method starts the ArduinoOTA functionality.
+Starts the network discovery processes (mDNS, etc.)
 
 RETURN VALUE:
-none.
+true if started successfully.
 
 SIDE EFFECTS:
 none
 
 ======================================================================*/
-void FirmwareUpdater::Begin()
+bool DiscoveryProxy::Begin()
 {
-   
-    ArduinoOTA.setHostname( _hostname.c_str() );
+    bool mdnsResult = MDNS.begin( _hostname.c_str() );
 
-    ArduinoOTA.setPort( _port );
+    //
+    // TODO - Add SSDP support.
+    //
 
-    if ( _password.length() > 0 )
-    {
-        ArduinoOTA.setPassword( _password.c_str() );
-    }
-
-    // Set the callbacks
-    ArduinoOTA.onStart( std::bind( &FirmwareUpdater::handleUpdateStart, this ) );
-    ArduinoOTA.onEnd(   std::bind( &FirmwareUpdater::handleUpdateComplete, this ) );
-
-    Serial.printf("FirmwareUpdater: starting OTA update support on port %d\n", _port);
-
-    ArduinoOTA.begin();
+    return mdnsResult;
 }
 
-/*======================================================================
-FUNCTION:
-Process()
-
-DESCRIPTION:
-Wrapper for the ArduinoOTA.handle().  You must call this periodically
-otherwise the device will not respond to OTA updates
-
-RETURN VALUE:
-none.
-
-SIDE EFFECTS:
-none
-
-======================================================================*/
-void FirmwareUpdater::Process()
+void DiscoveryProxy::AddService( const String &service, const String &protocol, int port )
 {
-    ArduinoOTA.handle();
-}
-
-/*======================================================================
-FUNCTION:
-handleUpdateStart()
-
-DESCRIPTION:
-Callback when the OTA process starts
-
-RETURN VALUE:
-none.
-
-SIDE EFFECTS:
-none
-
-======================================================================*/
-void FirmwareUpdater::handleUpdateStart()
-{
-    Serial.println( "FirmwareUpdater: firmware OTA update starting" );
-}
-
-/*======================================================================
-FUNCTION:
-handleUpdateComplete()
-
-DESCRIPTION:
-Callback that is called when the OTA process is complete
-
-RETURN VALUE:
-none.
-
-SIDE EFFECTS:
-none
-
-======================================================================*/
-void FirmwareUpdater::handleUpdateComplete()
-{
-    Serial.println( "FirmwareUpdater: update complete, restarting device" );
-    
-    // Sometimes the device doesn't seem to automagically restart
-    // so maybe we need to help it along???
-    //ESP.reset();
+    MDNS.addService( service, protocol, port );
 }
 
 /*=====================================================================

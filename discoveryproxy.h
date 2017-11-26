@@ -1,19 +1,18 @@
-#ifndef _GARAGEOMATIC_FIRMWAREUPDATER_H_
-#define _GARAGEOMATIC_FIRMWAREUPDATER_H_
+#ifndef _GARAGEOMATIC_DISCOVERYPROXY_H_
+#define _GARAGEOMATIC_DISCOVERYPROXY_H_
 
 /*======================================================================
 FILE:
-firmwareupdater.h
+discoveryproxy.h
 
 CREATOR:
 Sean Foley
 
 DESCRIPTION:
-This is a proxy class that hides the ArduinoOTA over-the-air 
-firmware update functionality
+Network and service discovery support.
 
 PUBLIC CLASSES AND FUNCTIONS:
-FirmwareUpdater
+DiscoveryProxy
 
 Copyright (C) 2017 Sean Foley  All Rights Reserved.
 
@@ -47,7 +46,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 // Include Files
 //----------------------------------------------------------------------
 
-#include "WString.h"
+#include <WString.h>
 
 //----------------------------------------------------------------------
 // Type Declarations
@@ -91,18 +90,23 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /*======================================================================
 CLASS:
-FirmwareUpdater
+DiscoveryProxy
 
 DESCRIPTION:
-This class provides over-the-air firmware update functionality. 
+Hide all the network/service discovery stuff behind this proxy
+class.
 
 HOW TO USE:
-1. Call the appropriate c-tor
-2. Call Begin() to initialize/start things up
-3. Periodically call Process() so all the internal handling/magic happens
+1. Construct the object with the hostanme 
+2. Call Begin() to start everything
+
+If your OS supports mDNS, you should now be able to resolve the 
+ip address of your device by typing "ping hostname.local" and
+you should be able to access the REST enpoints in a browser
+by adding .local to the hostname.
 
 ======================================================================*/
-class FirmwareUpdater
+class DiscoveryProxy
 {
     public:
 
@@ -116,11 +120,12 @@ class FirmwareUpdater
     // CLIENT INTERFACE
     //=================================================================
 
-    FirmwareUpdater( const String &hostname, const String &password, int port = 8266 );
+    DiscoveryProxy( const String &hostname );
 
-    void Begin();
+    // Call this to start network discovery
+    bool Begin();
 
-    void Process();
+    void AddService( const String &service, const String &protocol, int port );
 
     protected:
 
@@ -128,9 +133,7 @@ class FirmwareUpdater
     // SUBCLASS INTERFACE   
     //=================================================================
 
-    // Callbacks
-    void handleUpdateStart();
-    void handleUpdateComplete();
+    // None.
 
     private:
 
@@ -144,15 +147,14 @@ class FirmwareUpdater
     // IMPLEMENTATION INTERFACE    
     //=================================================================
 
-    // None.
+    // No copying
+    DiscoveryProxy( const DiscoveryProxy &rhs );
 
     //=================================================================
     // DATA MEMBERS    
     //=================================================================
 
     String _hostname;
-    String _password;
-    int _port;
 
 };
 
@@ -171,4 +173,4 @@ None.
 
 ======================================================================*/
 
-#endif	// #ifendif _GARAGEOMATIC_FIRMWAREUPDATER_H_
+#endif	// #ifendif _GARAGEOMATIC_DISCOVERYPROXY_H_

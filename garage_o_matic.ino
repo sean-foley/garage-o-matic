@@ -65,6 +65,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "timeproxy.h"
 
+#include "discoveryproxy.h"
+
 // Configuration and persistence used
 // for the garage-o-matic
 #include "configuration.h";
@@ -95,6 +97,8 @@ const int STATE_WIFI_STA_DISCONNECTED = 4;
 const int STATE_WIFI_STA_CONNECTED = 5;
 const int STATE_READY = 6;
 
+const String PROJECT_NAME = "garage-o-matic";
+
 //----------------------------------------------------------------------
 // Global Data Definitions
 //----------------------------------------------------------------------
@@ -115,6 +119,8 @@ GarageDoor::GarageDoorCollection garagedoors;
 volatile bool saveConfigFlag = false;
 
 std::unique_ptr<TimeProxy> timeProxy;
+
+std::unique_ptr<DiscoveryProxy> discoveryProxy;
 
 Configuration config;
 
@@ -348,7 +354,7 @@ none.
 ======================================================================*/
 bool wifiApConfigMode()
 {
-    const char* SSID = "garage-o-matic";
+    const char* SSID = PROJECT_NAME.c_str();
 
     bool connected = false;
 
@@ -598,7 +604,9 @@ void loop()
             {
                 Serial.println( "Starting firmware OTA support" );
 
-                firmwareUpdater.reset( new FirmwareUpdater( config.GetDevicePassword().c_str() ) );
+                firmwareUpdater.reset( new FirmwareUpdater( 
+                    PROJECT_NAME,
+                    config.GetDevicePassword().c_str() ) );
 
                 firmwareUpdater->Begin();
             }
@@ -637,6 +645,17 @@ void loop()
                 timeProxy.reset( new TimeProxy( config.GetNtpServer()) );
 
                 timeProxy->Begin();
+            }
+
+            if ( discoveryProxy == false )
+            {
+                discoveryProxy.reset( new DiscoveryProxy( PROJECT_NAME ) );
+
+                // Start network discovery
+                discoveryProxy->Begin();
+
+                // Add our web server
+                discoveryProxy->AddService( "http", "tcp", 80 );
             }
 
             activeState = STATE_READY;
