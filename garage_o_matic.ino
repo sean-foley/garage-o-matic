@@ -116,6 +116,8 @@ WiFiClient wifiClient;
 
 GarageDoor::GarageDoorCollection garagedoors;
 
+GarageDoor::DoorStatusCollection doorStatusCollection;
+
 volatile bool saveConfigFlag = false;
 
 std::unique_ptr<TimeProxy> timeProxy;
@@ -419,12 +421,12 @@ bool wifiApConfigMode()
 
         config.SetMqttServer( mqttServerParam.getValue() );
         config.SetMqttPort( mqttPortParam.getValue() );
-        config.SetMqttPubFeed( mqttPubFeedParam.getValue() );
-        config.SetNtpServer( ntpServerParam.getValue() );
-        config.SetDeviceUsername( deviceUserParam.getValue() );
-        config.SetDevicePassword( devicePassParam.getValue() );
+config.SetMqttPubFeed( mqttPubFeedParam.getValue() );
+config.SetNtpServer( ntpServerParam.getValue() );
+config.SetDeviceUsername( deviceUserParam.getValue() );
+config.SetDevicePassword( devicePassParam.getValue() );
 
-        ConfigurationManager::Save( config );
+ConfigurationManager::Save( config );
     }
 
     return connected;
@@ -447,14 +449,14 @@ none
 String serializeJSONPayload( const GarageDoor::GarageDoorCollection & garageDoors )
 {
     const int DOOR_BUF_SIZE = 50;
-    
+
     // We use about ~120 bytes for 2 doors.  This
     // buffer size is stoopid big.
     const int JSON_BUF_SIZE = 512;
     char json[JSON_BUF_SIZE] = { 0 };
 
-    snprintf( json, 
-              JSON_BUF_SIZE - 1, 
+    snprintf( json,
+              JSON_BUF_SIZE - 1,
               "{\"garageomatic\":{\"version\":\"1.0.0\",\"timeUTC\":\"%s\",\"garagedoors\":[",
               timeProxy->GetTimeStringUTC().c_str() );
 
@@ -485,9 +487,79 @@ String serializeJSONPayload( const GarageDoor::GarageDoorCollection & garageDoor
     }
 
     strncat( json, "]}}", JSON_BUF_SIZE - strlen( json ) );
-    
+
     return json;
 }
+
+/*======================================================================
+FUNCTION:
+loop()
+
+DESCRIPTION:
+For arduinos this is your main function loop.
+
+RETURN VALUE:
+none.
+
+SIDE EFFECTS:
+none
+
+======================================================================*/
+void publish()
+{
+    // We only want to publish on state changes
+    bool changed = false;
+
+    // Is this an initialization/startup case?
+    if ( doorStatusCollection.size() == 0 )
+    {
+        // Hydrate the collection with the current
+        // door statuses.  We will then use this 
+        // initial state to compare against future states.
+        for ( auto door : garagedoors )
+        {
+            doorStatusCollection.push_back( door.Status() );
+        }
+
+        changed = true;
+    }
+    else
+    {
+        for ( int i = 0; i < garagedoors.size(); i++ )
+        {
+            // Check each door in the collection against the 
+            // previous value. If the value doesn't match the previous
+            // value, then we need to trap this new state as the 
+            // current state, and flag that something has changed
+            if ( garagedoors[i].Status() != doorStatusCollection[i] )
+            {
+                // The door has opened/closed since the last check,
+                // so this becomes the current state.
+                doorStatusCollection[i] = garagedoors[i].Status();
+
+                // Flag that the status has changed
+                changed = true;
+            }
+        }
+    }
+
+    // Only publish if we have a mqtt proxy object
+    if ( mqttProxy != false )
+    {
+        if ( true == changed )
+        {
+            // Something changed, so publish the event
+            mqttProxy->Connect();
+            bool ok = mqttProxy->Publish( serializeJSONPayload( garagedoors ) );
+        }
+        else
+        {
+            // We need to send an MQTT keep-alive
+            mqttProxy->Ping();
+        }
+    }
+}
+
 
 /*======================================================================
 FUNCTION:
@@ -674,16 +746,10 @@ void loop()
             webserverProxy->Process();
             firmwareUpdater->Process();
             
-            if ( mqttProxy != false )
-            {
-                // Only publish if we have a mqtt proxy object
-                mqttProxy->Connect();
-                bool ok = mqttProxy->Publish( serializeJSONPayload( garagedoors ) );
-            }
+            // Publish data if needed
+            publish();
 
-            serializeJSONPayload( garagedoors );
-
-            delay( 100 );
+            delay( 50 );
             break;
     }
 }

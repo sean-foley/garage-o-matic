@@ -137,6 +137,10 @@ class MqttProxy
     // when this object was constructed
     bool Publish( const String &message );
 
+    // If you don't have data to publish, you should periodically call
+    // this method to keep the connection alive.
+    bool Ping();
+
     protected:
 
     //=================================================================

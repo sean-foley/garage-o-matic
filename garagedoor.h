@@ -120,13 +120,15 @@ class GarageDoor
     // TYPE DECLARATIONS AND CONSTANTS    
     //=================================================================
 
-    typedef std::vector<GarageDoor> GarageDoorCollection;
-
     enum DoorStatus
     {
         CLOSED = 0,
-        OPEN   = 1
+        OPEN = 1
     };
+
+    typedef std::vector<GarageDoor> GarageDoorCollection;
+
+    typedef std::vector<DoorStatus> DoorStatusCollection;
 
     //=================================================================
     // CLIENT INTERFACE

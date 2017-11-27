@@ -139,9 +139,7 @@ none
 
 ======================================================================*/
 bool MqttProxy::Connect()
-{
-    
-    
+{    
     // Stop if already connected.
     if ( _mqttClient->connected() )
     {
@@ -185,6 +183,25 @@ none
 bool MqttProxy::Publish( const String &message )
 {
     return _mqttPublisher->publish( message.c_str() );
+}
+
+/*======================================================================
+FUNCTION:
+Ping()
+
+DESCRIPTION:
+Pings the MQTT server to keep the connection alive
+
+RETURN VALUE:
+true if successful
+
+SIDE EFFECTS:
+none
+
+======================================================================*/
+bool MqttProxy::Ping()
+{
+    return _mqttClient->ping();
 }
 
 /*=====================================================================
