@@ -201,7 +201,7 @@ String TimeProxy::GetTimeStringUTC()
 
     // TODO - handle fixups in case we are not using a UTC referenced 
     // timezone
-    snprintf( buffer, BUF_SIZE, "%d-%d-%dT%d:%d:%dZ",
+    snprintf( buffer, BUF_SIZE, "%d-%02d-%02dT%02d:%02d:%02dZ",
               year( t ),
               month( t ),
               day( t ),
